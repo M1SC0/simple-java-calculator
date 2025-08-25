@@ -1,6 +1,7 @@
 package view;
 
-import org.example.util.CommonCostants;
+import service.CalculatorService;
+import util.CommonCostants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +10,7 @@ import java.awt.event.ActionListener;
 
 public class CalculatorGui extends JFrame implements ActionListener {
     private final SpringLayout springLayout = new SpringLayout();
+    private CalculatorService calculatorService;
 
     // display field
     private JTextField displayField;
@@ -27,6 +29,8 @@ public class CalculatorGui extends JFrame implements ActionListener {
         setResizable(false);
         setLocationRelativeTo(null);
         setLayout(springLayout);
+
+        calculatorService = new CalculatorService();
 
         addGuiComponents();
     }
@@ -58,7 +62,7 @@ public class CalculatorGui extends JFrame implements ActionListener {
         GridLayout gridLayout = new GridLayout(CommonCostants.BUTTON_ROWCOUNT, CommonCostants.BUTTON_COLCOUNT);
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(gridLayout);
-        buttons = new JButton[CommonCostants.BUTTON_COUNT];
+        this.buttons = new JButton[CommonCostants.BUTTON_COUNT];
         for (int i = 0; i < CommonCostants.BUTTON_COUNT; i++) {
             JButton button = new JButton(getButtonLabel(i));
             button.setFont(new Font("Dialog", Font.PLAIN, CommonCostants.BUTTON_FONTSIZE));
@@ -92,8 +96,58 @@ public class CalculatorGui extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String buttonCommand = e.getActionCommand();
-        // TODO: implement calculator logic here, 3:43:47
-    }
+        if (buttonCommand.matches("[0-9]")) {
+            if (pressedEquals || pressedOperator || displayField.getText().equals("0")) {
+                displayField.setText(buttonCommand);
+            } else {
+                displayField.setText(displayField.getText() + buttonCommand);
+            }
+            pressedOperator = false;
+            pressedEquals = false;
+
+        } else if (buttonCommand.equals("=")) {
+            calculatorService.setNum2(Double.parseDouble(displayField.getText()));
+
+            double result = 0;
+            switch (calculatorService.getMathSymbol()) {
+                case  '+':
+                    System.out.println(calculatorService.getNum1() + " + " + calculatorService.getNum2());
+                    result = calculatorService.add();
+                    break;
+                case '-':
+                    System.out.println(calculatorService.getNum1() + " - " + calculatorService.getNum2());
+                    result = calculatorService.subtract();
+                    break;
+                case  'x':
+                    System.out.println(calculatorService.getNum1() + " * " + calculatorService.getNum2());
+                    result = calculatorService.multiply();
+                    break;
+                case  '/':
+                    System.out.println(calculatorService.getNum1() + " / " + calculatorService.getNum2());
+                    result = calculatorService.divide();
+            }
+
+            displayField.setText(Double.toString(result));
+
+            pressedEquals = true;
+            pressedOperator = false;
+
+        } else if (buttonCommand.equals(".")) {
+            if (!displayField.getText().contains(".")) {
+                    displayField.setText(displayField.getText() + buttonCommand);
+            }
+        } else {
+            // operator
+            if (!pressedOperator) {
+                calculatorService.setNum1(Double.parseDouble(displayField.getText()));
+            }
+            calculatorService.setMathSymbol(buttonCommand.charAt(0));
+
+            // update flags
+            pressedOperator = true;
+            pressedEquals = false;
+        }
+        }
 
     public void open() {
         setVisible(true);

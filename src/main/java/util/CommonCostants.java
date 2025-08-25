@@ -1,4 +1,4 @@
-package org.example.util;
+package util;
 
 public class CommonCostants {
     // APP CONFIGS
