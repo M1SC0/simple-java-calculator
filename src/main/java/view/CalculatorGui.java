@@ -1,19 +1,22 @@
 package view;
 
 import service.CalculatorService;
-import util.CommonCostants;
+import util.CalculatorCostants;
+import util.CustomGbc;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLOutput;
+import java.util.Locale;
 
 public class CalculatorGui extends JFrame implements ActionListener {
-    private final SpringLayout springLayout = new SpringLayout();
     private CalculatorService calculatorService;
 
     // display field
     private JTextField displayField;
+    private JButton delButton;
 
     // buttons
     private JButton[] buttons;
@@ -23,15 +26,19 @@ public class CalculatorGui extends JFrame implements ActionListener {
     private boolean pressedEquals = false;
 
     public CalculatorGui() {
-        super(CommonCostants.APP_NAME);
-        setSize(CommonCostants.APP_SIZE[0], CommonCostants.APP_SIZE[1]);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
-        setLocationRelativeTo(null);
-        setLayout(springLayout);
+        // init frame
+        super(CalculatorCostants.APP_NAME);
 
+        setLayout(new GridBagLayout());
+        setMinimumSize(new Dimension(CalculatorCostants.APP_SIZE[0], CalculatorCostants.APP_SIZE[1]));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(true);
+        setLocationRelativeTo(null);
+
+        // init service
         calculatorService = new CalculatorService();
 
+        // handle GUI components
         addGuiComponents();
     }
 
@@ -40,53 +47,108 @@ public class CalculatorGui extends JFrame implements ActionListener {
         addDisplayFieldComponent();
 
         // add buttons components
-        addButtonComponents();
+        addNumAndOpbuttons();
     }
 
     private void addDisplayFieldComponent() {
-        JPanel displayFieldPanel = new JPanel(new BorderLayout());
-        displayField = new JTextField(CommonCostants.TEXTFIELD_LENGHT);
-        displayField.setFont(new Font("Dialog", Font.BOLD, CommonCostants.TEXTFIELD_FONTSIZE));
+        // add display field
+        JPanel displayFieldPanel = new JPanel(new GridBagLayout());
+        displayField = new JTextField();
+        displayField.setHorizontalAlignment(JTextField.RIGHT);
+        displayField.setFont(CalculatorCostants.TEXTFIELD_FONT);
         displayField.setEditable(false);
         displayField.setText("0");
-        displayField.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        displayFieldPanel.add(displayField, BorderLayout.CENTER);
+        displayFieldPanel.add(displayField, new CustomGbc.Builder().
+                setGridx(0).
+                setGridy(0).
+                setWeightx(1).
+                setWeighty(1).
+                setFill(GridBagConstraints.BOTH).
+                setInsets(new Insets(
+                        CalculatorCostants.BUTTON_TOP_INSETS,
+                        CalculatorCostants.BUTTON_LEFT_INSETS,
+                        CalculatorCostants.BUTTON_BOTTOM_INSETS,
+                        CalculatorCostants.BUTTON_RIGHT_INSETS)).
+                build());
 
-        this.getContentPane().add(displayFieldPanel);
-        springLayout.putConstraint(SpringLayout.NORTH, displayFieldPanel, CommonCostants.TEXTFIELD_SPRINGLAYOUT_NORTHPAD, SpringLayout.NORTH, this);
-        springLayout.putConstraint(SpringLayout.WEST, displayFieldPanel, CommonCostants.TEXTFIELD_SPRINGLAYOUT_WESTPAD, SpringLayout.WEST, this);
+        delButton = new JButton("DEL");
+        delButton.setFont(CalculatorCostants.TEXTFIELD_FONT);
+        delButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (displayField.getText().length() == 1) {
+                    displayField.setText("0");
+                } else {
+                    displayField.setText(displayField.getText().substring(0, displayField.getText().length() - 1)); }
+            }
+        });
+        displayFieldPanel.add(delButton, new CustomGbc.Builder().
+                setGridx(1).
+                setGridy(0).
+                setWeightx(0).
+                setWeighty(1).
+                setFill(GridBagConstraints.BOTH).
+                setInsets(new Insets(
+                        CalculatorCostants.BUTTON_TOP_INSETS,
+                        CalculatorCostants.BUTTON_LEFT_INSETS,
+                        CalculatorCostants.BUTTON_BOTTOM_INSETS,
+                        CalculatorCostants.BUTTON_RIGHT_INSETS)).
+                build());
+
+        add(displayFieldPanel, new CustomGbc.Builder().
+                setGridx(0).
+                setGridy(0).
+                setWeightx(1).
+                setWeighty(0.1).
+                setFill(GridBagConstraints.HORIZONTAL).
+                setInsets(new Insets(
+                        CalculatorCostants.BUTTON_TOP_INSETS,
+                        CalculatorCostants.BUTTON_LEFT_INSETS,
+                        CalculatorCostants.BUTTON_BOTTOM_INSETS,
+                        CalculatorCostants.BUTTON_RIGHT_INSETS)).
+                build());
     }
 
-    private void addButtonComponents() {
-        GridLayout gridLayout = new GridLayout(CommonCostants.BUTTON_ROWCOUNT, CommonCostants.BUTTON_COLCOUNT);
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(gridLayout);
-        this.buttons = new JButton[CommonCostants.BUTTON_COUNT];
-        for (int i = 0; i < CommonCostants.BUTTON_COUNT; i++) {
-            JButton button = new JButton(getButtonLabel(i));
-            button.setFont(new Font("Dialog", Font.PLAIN, CommonCostants.BUTTON_FONTSIZE));
-            button.addActionListener(this);
+    private void addNumAndOpbuttons() {
 
+        JPanel buttonPanel = new JPanel(new GridLayout(
+                CalculatorCostants.BUTTON_ROWCOUNT,
+                CalculatorCostants.BUTTON_COLCOUNT,
+                CalculatorCostants.BUTTON_HGAP,
+                CalculatorCostants.BUTTON_VGAP));
+
+        this.buttons = new JButton[CalculatorCostants.BUTTON_COUNT];
+        for (int i = 0; i < CalculatorCostants.BUTTON_COUNT; i++) {
+            String buttonLabel = getButtonLabel(i);
+            JButton button = new JButton(buttonLabel);
+            button.setFont(CalculatorCostants.BUTTON_FONT);
+            button.addActionListener(this);
+            buttons[i] = button;
             buttonPanel.add(button);
         }
 
-        gridLayout.setHgap(CommonCostants.BUTTON_HGAP);
-        gridLayout.setVgap(CommonCostants.BUTTON_VGAP);
-
-        this.getContentPane().add(buttonPanel);
-        springLayout.putConstraint(SpringLayout.NORTH, buttonPanel, CommonCostants.BUTTON_SPRINGLAYOUT_NORTHPAD, SpringLayout.NORTH, this);
-        springLayout.putConstraint(SpringLayout.WEST, buttonPanel, CommonCostants.BUTTON_SPRINGLAYOUT_WESTPAD, SpringLayout.WEST, this);
-
-
+        add(buttonPanel, new CustomGbc.Builder()
+                .setGridx(0)
+                .setGridy(1)
+                .setWeightx(1)
+                .setWeighty(1)
+                .setFill(GridBagConstraints.BOTH)
+                .setInsets(new Insets(
+                        CalculatorCostants.BUTTON_TOP_INSETS,
+                        CalculatorCostants.BUTTON_LEFT_INSETS,
+                        CalculatorCostants.BUTTON_BOTTOM_INSETS,
+                        CalculatorCostants.BUTTON_RIGHT_INSETS))
+                .build());
     }
 
     private String getButtonLabel(int buttonIndex) {
         switch (buttonIndex) {
-            case 0: return "7";  case 1: return "8";  case 2: return "9";  case 3: return "/";
-            case 4: return "4";  case 5: return "5";  case 6: return "6";  case 7: return "x";
-            case 8: return "1";  case 9: return "2";  case 10: return "3"; case 11: return "-";
-            case 12: return "."; case 13: return "0"; case 14: return "+"; case 15: return "=";
+            case 0: return "C";  case 1: return "CE";  case 2: return "√"; case 3: return "/";
+            case 4: return "7";  case 5: return "8";  case 6: return "9"; case 7: return "x";
+            case 8: return "4";  case 9: return "5";  case 10: return "6"; case 11: return "-";
+            case 12: return "1"; case 13: return "2"; case 14: return "3"; case 15: return "+";
+            case 16: return "."; case 17: return "0"; case 18: return "00"; case  19: return "=";
 
             default: return "";
         }
@@ -95,59 +157,97 @@ public class CalculatorGui extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+
         String buttonCommand = e.getActionCommand();
-        if (buttonCommand.matches("[0-9]")) {
-            if (pressedEquals || pressedOperator || displayField.getText().equals("0")) {
+        double result = 0;
+
+        if (buttonCommand.matches("[0-9]|00")) {
+            if (pressedEquals || pressedOperator || displayField.getText().matches("0|00")) {
                 displayField.setText(buttonCommand);
             } else {
                 displayField.setText(displayField.getText() + buttonCommand);
             }
+
             pressedOperator = false;
             pressedEquals = false;
 
         } else if (buttonCommand.equals("=")) {
             calculatorService.setNum2(Double.parseDouble(displayField.getText()));
 
-            double result = 0;
             switch (calculatorService.getMathSymbol()) {
                 case  '+':
-                    System.out.println(calculatorService.getNum1() + " + " + calculatorService.getNum2());
                     result = calculatorService.add();
                     break;
                 case '-':
-                    System.out.println(calculatorService.getNum1() + " - " + calculatorService.getNum2());
                     result = calculatorService.subtract();
                     break;
                 case  'x':
-                    System.out.println(calculatorService.getNum1() + " * " + calculatorService.getNum2());
                     result = calculatorService.multiply();
                     break;
                 case  '/':
-                    System.out.println(calculatorService.getNum1() + " / " + calculatorService.getNum2());
                     result = calculatorService.divide();
+                    break;
             }
-
-            displayField.setText(Double.toString(result));
+            displayField.setText(String.format(Locale.US, "%f", result));
 
             pressedEquals = true;
             pressedOperator = false;
 
+        } else if (buttonCommand.equals("√")) {
+            if (!pressedOperator) {
+                calculatorService.setNum1(Double.parseDouble(displayField.getText()));
+                result = calculatorService.squareRootNum1();
+            } else {
+                calculatorService.setNum2(calculatorService.getNum1());
+                result = calculatorService.squareRootNum2();
+            }
+            displayField.setText(String.format(Locale.US, "%f", result));
+
+            pressedEquals = false;
+            pressedOperator = false;
+
+
+            System.out.println(result);
         } else if (buttonCommand.equals(".")) {
             if (!displayField.getText().contains(".")) {
                     displayField.setText(displayField.getText() + buttonCommand);
             }
+
+            pressedEquals = false;
+            pressedOperator = false;
+
+        } else if (buttonCommand.matches("C|CE|DEL")) {
+            switch (buttonCommand) {
+                case "C":
+                    displayField.setText("0");
+                    calculatorService.setNum1(0);
+                    calculatorService.setNum2(0);
+                    break;
+                case "CE":
+                    displayField.setText("0");
+            }
+
+            pressedEquals = false;
+            pressedOperator = false;
+
         } else {
-            // operator
             if (!pressedOperator) {
                 calculatorService.setNum1(Double.parseDouble(displayField.getText()));
             }
+            if (!pressedOperator && displayField.getText().equals("0") && buttonCommand.equals("-")) {
+                displayField.setText("-");
+                pressedOperator = false;
+                pressedEquals = false;
+                return;
+            }
             calculatorService.setMathSymbol(buttonCommand.charAt(0));
 
-            // update flags
+
             pressedOperator = true;
             pressedEquals = false;
         }
-        }
+
+    }
 
     public void open() {
         setVisible(true);
