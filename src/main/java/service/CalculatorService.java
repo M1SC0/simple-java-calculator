@@ -1,7 +1,7 @@
 package service;
 
 public class CalculatorService {
-
+    private double result;
     private double num1, num2;
     private char mathSymbol;
     private String cancelSymbol;
@@ -22,6 +22,10 @@ public class CalculatorService {
         this.cancelSymbol = cancelSymbol;
     }
 
+    public double getResult() {
+        return result;
+    }
+
     public void setNum1(double num1) {
         this.num1 = num1;
     }
@@ -38,25 +42,31 @@ public class CalculatorService {
         return num2;
     }
 
-    public double add() {
-        return (num1 + num2 == -0.0) ? 0.0 : (num1 + num2);    }
-
-    public double subtract() {
-        return (num1 - num2 == -0.0) ? 0.0 : (num1 - num2);    }
-
-    public double multiply() {
-        return (num1 * num2 == -0.0) ? 0.0 : (num1 * num2);    }
-
-    public double divide() {
-        return (num1 / num2 == -0.0) ? 0.0 : (num1 / num2);
+    public double add(double number) {
+        result += number;
+        return result;
     }
 
-    public double squareRootNum1() {
-        return Math.sqrt(this.num1);
+    public double subtract(double number) {
+        result -= number;
+        return result;
     }
 
-    public double squareRootNum2() {
-        return Math.sqrt(this.num2);
+    public double multiply(double number) {
+        result *= number;
+        return result;
     }
 
+    public double divide(double number) {
+        result /= number;
+        return result;
+    }
+
+    public double squareRoot(double number) {
+        return Math.sqrt(number);
+    }
+
+    public void setResult(double result) {
+        this.result = result;
+    }
 }

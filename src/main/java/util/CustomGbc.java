@@ -77,16 +77,6 @@ public class CustomGbc extends GridBagConstraints {
             return this;
         }
 
-        public Builder setIpadx(int ipadx) {
-            this.ipadx = ipadx;
-            return this;
-        }
-
-        public Builder setIpady(int ipady) {
-            this.ipady = ipady;
-            return this;
-        }
-
         public CustomGbc build() {
 
             return new CustomGbc(this);
