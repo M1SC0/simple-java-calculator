@@ -8,14 +8,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.SQLOutput;
 
 public class CalculatorGui extends JFrame implements ActionListener {
-    private CalculatorService calculatorService;
+    // calculator service
+    private final CalculatorService CALCULATOR_SERVICE;
 
     // display field
     private JTextField displayField;
-    private JTextField previousField;
     private JButton delButton;
 
     // buttons
@@ -24,8 +23,7 @@ public class CalculatorGui extends JFrame implements ActionListener {
     // flags
     private boolean pressedOperator = false;
     private boolean pressedEquals = false;
-    private String previousOp;
-    private String previousNumber;
+    private boolean pressedNumber = false;
 
     public CalculatorGui() {
         // init frame
@@ -37,8 +35,11 @@ public class CalculatorGui extends JFrame implements ActionListener {
         setResizable(true);
         setLocationRelativeTo(null);
 
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icon/small_icon.png"));
+        setIconImage(icon.getImage());
+
         // init service
-        calculatorService = new CalculatorService();
+        CALCULATOR_SERVICE = new CalculatorService();
 
         // handle GUI components
         addGuiComponents();
@@ -54,7 +55,6 @@ public class CalculatorGui extends JFrame implements ActionListener {
 
     private void addDisplayFieldComponent() {
         JPanel displayFieldPanel = new JPanel(new GridBagLayout());
-
 //        // add previous number field
 //        previousField = new JTextField();
 //        previousField.setHorizontalAlignment(JTextField.RIGHT);
@@ -97,7 +97,7 @@ public class CalculatorGui extends JFrame implements ActionListener {
                 build());
 
         // delete last inserted character button
-        delButton = new JButton("DEL");
+        delButton = new JButton("⌫");
         delButton.setFont(CalculatorCostants.TEXTFIELD_FONT);
         delButton.addActionListener(this);
         displayFieldPanel.add(delButton, new CustomGbc.Builder().
@@ -140,6 +140,16 @@ public class CalculatorGui extends JFrame implements ActionListener {
             String buttonLabel = getButtonLabel(i);
             JButton button = new JButton(buttonLabel);
             button.setFont(CalculatorCostants.BUTTON_FONT);
+            if (buttonLabel.matches("[0-9]|\\.|\\+/-")) {
+                button.setBackground(CalculatorCostants.BUTTON_DARKGRAY_COLOR);
+                button.setForeground(CalculatorCostants.BUTTON_WHITE_COLOR);
+            } else if (buttonLabel.matches("[+\\-x/=]")) {
+                button.setBackground(CalculatorCostants.BUTTON_ORANGE_COLOR);
+                button.setForeground(CalculatorCostants.BUTTON_WHITE_COLOR);
+            } else {
+                button.setBackground(CalculatorCostants.BUTTON_LIGHTGRAY_COLOR);
+                button.setForeground(CalculatorCostants.BUTTON_BLACK_COLOR);
+            }
             button.addActionListener(this);
             buttons[i] = button;
             buttonPanel.add(button);
@@ -165,7 +175,7 @@ public class CalculatorGui extends JFrame implements ActionListener {
             case 4: return "7";  case 5: return "8";  case 6: return "9"; case 7: return "x";
             case 8: return "4";  case 9: return "5";  case 10: return "6"; case 11: return "-";
             case 12: return "1"; case 13: return "2"; case 14: return "3"; case 15: return "+";
-            case 16: return "."; case 17: return "0"; case 18: return "00"; case  19: return "=";
+            case 16: return "."; case 17: return "0"; case 18: return "+/-"; case  19: return "=";
 
             default: return "";
         }
@@ -178,120 +188,93 @@ public class CalculatorGui extends JFrame implements ActionListener {
         String buttonCommand = e.getActionCommand();
         double result = 0;
 
-        if (buttonCommand.matches("[0-9]|00")) {
-            if (displayField.getText().matches("0|00")) {
+        // handle number buttons
+        if (buttonCommand.matches("[0-9]")) {
+            if (displayField.getText().matches("0")) {
                 displayField.setText(buttonCommand);
             } else {
                 displayField.setText(displayField.getText() + buttonCommand);
             }
-
-        } else if (buttonCommand.matches("[+\\-x/]")) {
-            if (!pressedOperator) {
-                System.out.println("pressed operator first time: setting pressedOperator to true");
-                previousOp = buttonCommand;
-                calculatorService.setResult(Double.parseDouble(displayField.getText()));
-            } else {
-                System.out.println("Operation button : " + buttonCommand);
-                switch (previousOp) {
-                    case "+":
-                        System.out.println("Setting previousOp: " + "+");
-                        if (!pressedEquals) {
-                            calculatorService.add(Double.parseDouble(displayField.getText()));
-                            pressedEquals = false;
-                        }
-                        break;
-                    case "-":
-                        System.out.println("Setting previousOp: " + "-");
-                        if (!pressedEquals) {
-                            calculatorService.subtract(Double.parseDouble(displayField.getText()));
-                            pressedEquals = false;
-                        }
-                        break;
-                    case "x":
-                        System.out.println("Setting previousOp: " + "x");
-                        if (!pressedEquals) {
-                            calculatorService.multiply(Double.parseDouble(displayField.getText()));
-                            pressedEquals = false;
-                        }
-                            break;
-                    case "/":
-                        System.out.println("Setting previousOp: " + "/");
-                        if (!pressedEquals) {
-                            calculatorService.divide(Double.parseDouble(displayField.getText()));
-                            pressedEquals = false;
-                        }
-                        break;
-                }
-                pressedOperator = true;
-            }
-
-            displayField.setText("0");
-            previousOp = buttonCommand;
-            pressedOperator = true;
-            System.out.println(calculatorService.getResult());
-        } else if (buttonCommand.equals("√")) {
-            System.out.println("Setting previousOp: " + "√");
-            double temp = calculatorService.squareRoot(Double.parseDouble(displayField.getText()));
-            displayField.setText(Double.toString(temp));
+            pressedNumber = true;
+            pressedOperator = false;
             pressedEquals = false;
-        } else if (buttonCommand.equals("=")) {
-            System.out.println("Operation button: =");
-            System.out.println("Previous number: " + previousNumber);
-            switch (previousOp) {
-                case "+":
-                    if (!pressedEquals) {
-                        result = calculatorService.add(Double.parseDouble(displayField.getText()));
-                        previousNumber = displayField.getText();
-                    } else {
-                    result = calculatorService.add(Double.parseDouble(previousNumber));
-                    }
-                    break;
-                case "-":
-                    if (!pressedEquals) {
-                        result = calculatorService.subtract(Double.parseDouble(displayField.getText()));
-                        previousNumber = displayField.getText();
-                    } else {
-                    result = calculatorService.subtract(Double.parseDouble(previousNumber));
-                    }
-                    break;
-                case "x":
-                    if (!pressedEquals) {
-                        result = calculatorService.multiply(Double.parseDouble(displayField.getText()));
-                        previousNumber = displayField.getText();
-                    } else {
-                        System.out.println(calculatorService.getResult() + " * " + previousNumber);
-                        result = calculatorService.multiply(Double.parseDouble(previousNumber));
-                    }
-                    break;
-                case "/":
-                    if (!pressedEquals) {
-                        result = calculatorService.divide(Double.parseDouble(displayField.getText()));
-                        previousNumber = displayField.getText();
-                    } else {
-                    result = calculatorService.divide(Double.parseDouble(previousNumber));
-                    }
-                    break;
+        }
+
+        // handle operator buttons
+        else if (buttonCommand.matches("[+\\-x/]"))
+        {
+            if (CALCULATOR_SERVICE.getLastFromExpression().matches("[+\\-x/]") && !pressedNumber)
+            {
+                CALCULATOR_SERVICE.updateLastInExpression(buttonCommand);
+            } else {
+                CALCULATOR_SERVICE.addToExpression(displayField.getText());
+                CALCULATOR_SERVICE.addToExpression(buttonCommand);
+                pressedNumber = false;
+                pressedOperator = true;
+                pressedEquals = false;
+        }
+            displayField.setText("0");
+        }
+
+        // handle equals button
+        else if (buttonCommand.equals("=")) {
+            if (pressedNumber && !pressedEquals) {
+                CALCULATOR_SERVICE.addToExpression(displayField.getText());
+                pressedEquals = true;
+            } else if (!pressedNumber && pressedOperator && !pressedEquals) {
+                CALCULATOR_SERVICE.removeLastFromExpression();
+                pressedEquals = true;
             }
+            result = CALCULATOR_SERVICE.calculateResult();
+            displayField.setText(Double.toString(result));
+        }
 
-            calculatorService.setResult(result);
-            displayField.setText(String.valueOf(result));
-            pressedEquals = true;
+        // handle special buttons
+        else if (buttonCommand.matches("√|\\.|\\+/-"))
+        {
+            switch (buttonCommand) {
+                case ".":
+                    if (!displayField.getText().contains(".")) {
+                        displayField.setText(displayField.getText() + ".");
+                    }
+                    break;
+                case "√":
+                    if (pressedNumber) {
+                        CALCULATOR_SERVICE.squareRoot(Double.parseDouble(displayField.getText()));
+                        double number = CALCULATOR_SERVICE.squareRoot(Double.parseDouble(displayField.getText()));
+                        displayField.setText(number + "");
+                    }
+                case "+/-":
+                    if (!displayField.getText().equals("0")) {
+                        if (!displayField.getText().contains("-")) {
+                            displayField.setText("-" + displayField.getText());
+                        } else {
+                            displayField.setText(displayField.getText().substring(1));
+                        }
+                    }
+            }
+        }
 
-        } else if (buttonCommand.matches("C|CE|DEL")) {
+        // handle clear and delete buttons
+        else if (buttonCommand.matches("C|CE|⌫")) {
             switch (buttonCommand) {
                 case "C":
                     displayField.setText("0");
-                    pressedOperator = false;
+                    CALCULATOR_SERVICE.resetExpression();
                     pressedEquals = false;
-                    calculatorService.setResult(0);
+                    pressedNumber = false;
+                    pressedOperator = false;
                     break;
                 case "CE":
                     displayField.setText("0");
-                    calculatorService.setResult(0);
+                    pressedNumber = false;
                     break;
-                case "DEL":
-                    if (!(displayField.getText().equals("0")) ) {
-                        displayField.setText(displayField.getText().substring(0, displayField.getText().length() - 1));
+                case "⌫":
+                    String currentText = displayField.getText();
+                    if (currentText.length() > 1) {
+                        displayField.setText(currentText.substring(0, currentText.length() - 1));
+                    } else {
+                        displayField.setText("0");
                     }
                     break;
             }
