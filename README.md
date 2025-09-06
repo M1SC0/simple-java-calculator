@@ -3,9 +3,8 @@ A simple calculator developed in Java, the first of many personal Java projects.
 This project was built as a learning exercise to understand Java GUI, event handling, and testing with JUnit.
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/4e4c093c-ca29-49de-9e99-0cfb2112003f" width="260" />
-  <img src="https://github.com/user-attachments/assets/11cf1c95-47f5-4e63-9627-c08ee3032001" width="375" />
-  <img src="https://github.com/user-attachments/assets/fb71bd6a-84d8-4e3c-ae8a-decf58796c15" width="260" />
+  <img src="https://github.com/user-attachments/assets/4e4c093c-ca29-49de-9e99-0cfb2112003f" width="250" />
+  <img src="https://github.com/user-attachments/assets/fb71bd6a-84d8-4e3c-ae8a-decf58796c15" width="250" />
 </p>
 
 ## Features
