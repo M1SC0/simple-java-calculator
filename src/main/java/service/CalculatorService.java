@@ -8,6 +8,7 @@ import java.util.Arrays;
 public class CalculatorService {
     private double num1, num2;
     private ArrayList<String> espression;
+    private double lastInput;
     private String[] operations = {"/", "x", "+", "-"};
 
     // OPERATIONS

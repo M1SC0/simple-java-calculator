@@ -24,6 +24,7 @@ public class CalculatorGui extends JFrame implements ActionListener {
     private boolean pressedOperator = false;
     private boolean pressedEquals = false;
     private boolean pressedNumber = false;
+    private boolean enableButtons = true;
 
     public CalculatorGui() {
         // init frame
@@ -190,10 +191,17 @@ public class CalculatorGui extends JFrame implements ActionListener {
 
         // handle number buttons
         if (buttonCommand.matches("[0-9]")) {
-            if (displayField.getText().matches("0")) {
+            if (displayField.getText().matches("0") || pressedEquals) {
                 displayField.setText(buttonCommand);
             } else {
                 displayField.setText(displayField.getText() + buttonCommand);
+            }
+            if (!enableButtons) {
+                for (JButton button : buttons) {
+                    button.setEnabled(true);
+                    delButton.setEnabled(true);
+                }
+                enableButtons = true;
             }
             pressedNumber = true;
             pressedOperator = false;
@@ -203,8 +211,7 @@ public class CalculatorGui extends JFrame implements ActionListener {
         // handle operator buttons
         else if (buttonCommand.matches("[+\\-x/]"))
         {
-            if (CALCULATOR_SERVICE.getLastFromExpression().matches("[+\\-x/]") && !pressedNumber)
-            {
+            if (CALCULATOR_SERVICE.getLastFromExpression().matches("[+\\-x/]") && !pressedNumber) {
                 CALCULATOR_SERVICE.updateLastInExpression(buttonCommand);
             } else {
                 CALCULATOR_SERVICE.addToExpression(displayField.getText());
@@ -220,13 +227,31 @@ public class CalculatorGui extends JFrame implements ActionListener {
         else if (buttonCommand.equals("=")) {
             if (pressedNumber && !pressedEquals) {
                 CALCULATOR_SERVICE.addToExpression(displayField.getText());
-                pressedEquals = true;
-            } else if (!pressedNumber && pressedOperator && !pressedEquals) {
+            } else if (!pressedNumber && pressedOperator) {
                 CALCULATOR_SERVICE.removeLastFromExpression();
-                pressedEquals = true;
+            } else if (!pressedNumber && pressedEquals) {
+                CALCULATOR_SERVICE.addToExpression(displayField.getText());
             }
+            pressedEquals = true;
+            pressedNumber = false;
+            pressedOperator = false;
             result = CALCULATOR_SERVICE.calculateResult();
-            displayField.setText(Double.toString(result));
+            if (Double.isNaN(result) || Double.isInfinite(result)) {
+                System.out.println("Error in calculation");
+                displayField.setText("Error");
+                delButton.setEnabled(false);
+                for (JButton button : buttons) {
+                    if (!button.getText().matches("[0-9]|C")) {
+                        button.setEnabled(false);
+                        enableButtons = false;
+                    }
+                }
+            } else {
+                displayField.setText(Double.toString(result));
+            }
+            displayField.setCaretPosition(0);
+            CALCULATOR_SERVICE.resetExpression();
+            System.out.println(CALCULATOR_SERVICE.getEspression());
         }
 
         // handle special buttons
@@ -239,11 +264,13 @@ public class CalculatorGui extends JFrame implements ActionListener {
                     }
                     break;
                 case "√":
-                    if (pressedNumber) {
+                    if (pressedNumber || pressedEquals) {
                         CALCULATOR_SERVICE.squareRoot(Double.parseDouble(displayField.getText()));
                         double number = CALCULATOR_SERVICE.squareRoot(Double.parseDouble(displayField.getText()));
                         displayField.setText(number + "");
+                        displayField.setCaretPosition(0);
                     }
+                    break;
                 case "+/-":
                     if (!displayField.getText().equals("0")) {
                         if (!displayField.getText().contains("-")) {
@@ -257,6 +284,11 @@ public class CalculatorGui extends JFrame implements ActionListener {
 
         // handle clear and delete buttons
         else if (buttonCommand.matches("C|CE|⌫")) {
+            for (JButton button : buttons) {
+                delButton.setEnabled(true);
+                button.setEnabled(true);
+                enableButtons = true;
+            }
             switch (buttonCommand) {
                 case "C":
                     displayField.setText("0");
